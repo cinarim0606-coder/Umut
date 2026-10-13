@@ -1,30 +1,65 @@
 name: Build Umut AI APK
+
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Projeyi indir
         uses: actions/checkout@v4
-      - name: ZIP içindeki projeyi çıkar
+
+      - name: ZIP dosyasını çıkar
         run: |
           sudo apt-get update
           sudo apt-get install -y unzip
+          mkdir -p extracted
           unzip -o UmutAI_Android_APK_Kaynak_Projesi-1.zip -d extracted
-          cp -a extracted/UmutAI/. .
+          find extracted -maxdepth 4 -type f | head -80
+
+      - name: Proje dosyalarını hazırla
+        run: |
+          if [ -f extracted/settings.gradle ]; then
+            cp -a extracted/. .
+          elif [ -f extracted/UmutAI/settings.gradle ]; then
+            cp -a extracted/UmutAI/. .
+          else
+            ROOT=$(find extracted -name settings.gradle -type f -print -quit)
+            if [ -z "$ROOT" ]; then
+              echo "HATA: settings.gradle bulunamadı."
+              exit 1
+            fi
+            DIR=$(dirname "$ROOT")
+            cp -a "$DIR"/. .
+          fi
+
+          echo "Proje dosyaları:"
+          ls -la
+          test -f settings.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
+
       - name: Java kur
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
       - name: APK oluştur
         run: gradle assembleDebug
+
       - name: APK dosyasını yükle
         uses: actions/upload-artifact@v4
         with:
           name: Umut-AI-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
