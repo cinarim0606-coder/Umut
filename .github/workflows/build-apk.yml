@@ -1,0 +1,24 @@
+name: Build Umut AI APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Projeyi indir
+        uses: actions/checkout@v4
+      - name: Java kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Gradle ile APK oluştur
+        run: gradle assembleDebug
+      - name: APK dosyasını paketle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Umut-AI-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
