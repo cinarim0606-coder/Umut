@@ -20,27 +20,16 @@ jobs:
           sudo apt-get install -y unzip
           mkdir -p extracted
           unzip -o UmutAI_Android_APK_Kaynak_Projesi-1.zip -d extracted
-          find extracted -maxdepth 4 -type f | head -80
 
       - name: Proje dosyalarını hazırla
         run: |
-          if [ -f extracted/settings.gradle ]; then
-            cp -a extracted/. .
-          elif [ -f extracted/UmutAI/settings.gradle ]; then
-            cp -a extracted/UmutAI/. .
-          else
-            ROOT=$(find extracted -name settings.gradle -type f -print -quit)
-            if [ -z "$ROOT" ]; then
-              echo "HATA: settings.gradle bulunamadı."
-              exit 1
-            fi
-            DIR=$(dirname "$ROOT")
-            cp -a "$DIR"/. .
+          ROOT=$(find extracted -name settings.gradle -type f -print -quit)
+          if [ -z "$ROOT" ]; then
+            echo "HATA: settings.gradle bulunamadı."
+            exit 1
           fi
-
-          echo "Proje dosyaları:"
-          ls -la
-          test -f settings.gradle
+          DIR=$(dirname "$ROOT")
+          cp -a "$DIR"/. .
           test -f app/build.gradle
           test -f app/src/main/AndroidManifest.xml
 
@@ -50,8 +39,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Android SDK kur
-        uses: android-actions/setup-android@v3
+      - name: Gradle kur
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK hazırla
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: APK oluştur
         run: gradle assembleDebug
