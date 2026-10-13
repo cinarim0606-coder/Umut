@@ -10,14 +10,20 @@ jobs:
     steps:
       - name: Projeyi indir
         uses: actions/checkout@v4
+      - name: ZIP içindeki projeyi çıkar
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          unzip -o UmutAI_Android_APK_Kaynak_Projesi-1.zip -d extracted
+          cp -a extracted/UmutAI/. .
       - name: Java kur
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Gradle ile APK oluştur
+      - name: APK oluştur
         run: gradle assembleDebug
-      - name: APK dosyasını paketle
+      - name: APK dosyasını yükle
         uses: actions/upload-artifact@v4
         with:
           name: Umut-AI-APK
