@@ -22,15 +22,19 @@ jobs:
           unzip -o UmutAI_Android_APK_Kaynak_Projesi-1.zip -d extracted
 
       - name: Proje dosyalarını hazırla
+        shell: bash
         run: |
           ROOT=$(find extracted -name settings.gradle -type f -print -quit)
           if [ -z "$ROOT" ]; then
-            echo "HATA: settings.gradle bulunamadı."
+            ROOT=$(find extracted -name settings.gradle.kts -type f -print -quit)
+          fi
+          if [ -z "$ROOT" ]; then
+            echo "HATA: Gradle proje dosyası bulunamadı."
             exit 1
           fi
           DIR=$(dirname "$ROOT")
           cp -a "$DIR"/. .
-          test -f app/build.gradle
+          test -f app/build.gradle -o -f app/build.gradle.kts
           test -f app/src/main/AndroidManifest.xml
 
       - name: Java kur
@@ -39,13 +43,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Gradle kur
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Android SDK hazırla
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: APK oluştur
         run: gradle assembleDebug
